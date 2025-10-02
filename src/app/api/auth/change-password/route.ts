@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
     const { currentPassword, newPassword } = await request.json();
 
-    const token = cookies().get("token")?.value;
+    const token = (await cookies()).get("token")?.value;
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -60,10 +60,14 @@ export async function POST(request: Request) {
     user.password = hashedPassword;
     await user.save();
 
-    return NextResponse.json(
-      { message: "Password changed successfully" },
+    const response =  NextResponse.json(
+      { message: "Password changed successfully, You are being redirected to Login" },
       { status: 200 }
     );
+   
+    response.cookies.set("token", "", { maxAge: 0, path: "/" });
+    return response;
+      
   } catch (error) {
     console.error("Change password error:", error);
     return NextResponse.json(
