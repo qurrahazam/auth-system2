@@ -40,10 +40,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          Welcome Back
+          Welcome
         </h1>
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          {/* Email Input */}
+          
           <input
             type="email"
             placeholder="Enter your email"
@@ -53,7 +53,7 @@ export default function LoginPage() {
             required
           />
 
-          {/* Password Input */}
+ 
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -72,7 +72,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Submit Button */}
+     
           <button
             type="submit"
             disabled={loading}
@@ -82,7 +82,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Error Message */}
+
         {error && (
           <p
             className="text-red-500 mt-3 text-center text-sm"
@@ -92,7 +92,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        {/* Forgot Password */}
+      
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push("/forgot-password")}
@@ -103,7 +103,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Sign up link */}
+
         <p className="mt-4 text-center text-gray-600 text-sm">
           Don’t have an account?{" "}
           <button
