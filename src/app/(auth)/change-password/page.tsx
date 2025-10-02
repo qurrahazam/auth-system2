@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
-
+  const router = useRouter();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -34,6 +35,11 @@ export default function ChangePasswordPage() {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
+
+        setTimeout(() => {
+        router.push("/login");
+        }, 2000);
+
       } else {
         setMessage(data.error || "Something went wrong");
       }
