@@ -12,6 +12,10 @@ export default function DashboardPage() {
     }
   };
 
+  const handleChangePassword = () => {
+    router.push("/change-password");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg text-center">
@@ -24,6 +28,15 @@ export default function DashboardPage() {
         >
           Logout
         </button>
+        <button
+          onClick={handleChangePassword}
+          className="ml-4 bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition shadow-md"
+        >
+          Change Password
+        </button>
+      </div>
+      <div className="absolute bottom-4 text-sm text-gray-500">
+        &copy; 2024 Your Company
       </div>
     </div>
   );
