@@ -17,13 +17,15 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      const res = await fetch("/api/change-password", {
+        const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+            "Content-Type": "application/json",
         },
         body: JSON.stringify({ currentPassword, newPassword }),
-      });
+        credentials: "include", 
+        });
+
 
       const data = await res.json();
 
@@ -33,20 +35,12 @@ export default function ChangePasswordPage() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-      if (res.status === 400) {
-        setMessage((data.error || "Invalid current password"));
-      } else if (res.status === 401) {
-        setMessage("Unauthorized. Please log in again.");
-      } else if (res.status === 500) {
-        setMessage("Server error. Try again later.");
-      } else {
         setMessage(data.error || "Something went wrong");
       }
+    } catch (error) {
+      setMessage("Network error. Please check your internet connection.");
     }
-  } catch (error: any) {
-    setMessage("Network error. Please check your internet connection.");
-  }
-};
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -96,7 +90,15 @@ export default function ChangePasswordPage() {
         </div>
 
         {message && (
-          <p className="text-center text-sm text-red-500 mb-4">{message}</p>
+          <p
+            className={`text-center text-sm mb-4 ${
+              message.includes("successfully")
+                ? "text-green-600"
+                : "text-red-500"
+            }`}
+          >
+            {message}
+          </p>
         )}
 
         <button
