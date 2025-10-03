@@ -82,7 +82,7 @@ export default function SignupPage() {
 
         {error && <p className="text-red-500 text-sm mt-3 text-center">{error}</p>}
 
-        <p className="text-gray-600 text-sm text-center mt-6">
+        <p className="text-gray-600 text-lg text-center mt-6">
           Already have an account?{" "}
           <a href="/login" className="text-emerald-600 font-medium hover:underline">
             Login

@@ -9,6 +9,7 @@ export default function ChangePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -18,28 +19,24 @@ export default function ChangePasswordPage() {
     }
 
     try {
-        const res = await fetch("/api/auth/change-password", {
+      const res = await fetch("/api/auth/change-password", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
-        credentials: "include", 
-        });
-
+        credentials: "include",
+      });
 
       const data = await res.json();
 
       if (res.ok) {
-        setMessage(data.message);
+        setMessage(data.message || "Password updated successfully!");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
 
         setTimeout(() => {
-        router.push("/login");
-        }, 2000);
-
+          router.push("/login");
+        }, 3000);
       } else {
         setMessage(data.error || "Something went wrong");
       }
@@ -49,71 +46,71 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-emerald-600 mb-6">
           Change Password
         </h2>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Current Password
-          </label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="password"
+            placeholder="Current Password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-400"
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
             required
           />
-        </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">New Password</label>
           <input
             type="password"
+            placeholder="New Password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-400"
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
             required
           />
-        </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">
-            Confirm New Password
-          </label>
           <input
             type="password"
+            placeholder="Confirm New Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-400"
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
             required
           />
-        </div>
 
-        {message && (
-          <p
-            className={`text-center text-sm mb-4 ${
-              message.includes("successfully")
-                ? "text-green-600"
-                : "text-red-500"
-            }`}
+          {message && (
+            <p
+              className={`text-center text-sm ${
+                message.toLowerCase().includes("success")
+                  ? "text-green-600"
+                  : "text-red-500"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
           >
-            {message}
-          </p>
-        )}
+            Update Password
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
-        >
-          Update Password
-        </button>
-      </form>
+        <p className="text-gray-600 text-lg text-center mt-6">
+          Back to{" "}
+          <button
+            onClick={() => router.push("/login")}
+            className="text-emerald-600 font-medium hover:underline"
+            type="button"
+          >
+            Login
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

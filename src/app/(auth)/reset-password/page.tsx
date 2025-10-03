@@ -30,8 +30,8 @@ export default function ResetPasswordPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage(data.message);
-        setTimeout(() => router.push("/login"), 3000); 
+        setMessage(data.message || "Password reset successfully!");
+        setTimeout(() => router.push("/login"), 3000);
       } else {
         setMessage(data.error || "Something went wrong");
       }
@@ -41,42 +41,62 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold mb-6 text-center">Reset Password</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-emerald-600 mb-6">
+          Reset Password
+        </h2>
 
-        <input
-          type="password"
-          placeholder="New password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg mb-4"
-          required
-        />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+            required
+          />
 
-        <input
-          type="password"
-          placeholder="Confirm new password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg mb-4"
-          required
-        />
+          <input
+            type="password"
+            placeholder="Confirm New Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+            required
+          />
 
-        {message && (
-          <p className="text-center text-sm mb-4 text-red-500">{message}</p>
-        )}
+          {message && (
+            <p
+              className={`text-center text-sm ${
+                message.toLowerCase().includes("success")
+                  ? "text-green-600"
+                  : "text-red-500"
+              }`}
+            >
+              {message}
+            </p>
+          )}
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
-        >
-          Update Password
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+          >
+            Update Password
+          </button>
+        </form>
+
+        <p className="text-gray-600 text-lg text-center mt-6">
+          Back to{" "}
+          <button
+            onClick={() => router.push("/login")}
+            className="text-emerald-600 font-medium hover:underline"
+            type="button"
+          >
+            Login
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

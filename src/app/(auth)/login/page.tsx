@@ -37,81 +37,73 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        <h1 className="text-2xl font-bold text-center text-emerald-600 mb-6">
           Welcome
         </h1>
+
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          
           <input
             type="email"
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 p-3 rounded-lg outline-none"
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
             required
           />
 
- 
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 p-3 rounded-lg outline-none w-full"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none pr-10"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-3 text-sm text-blue-600 hover:underline"
               onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-emerald-600 text-sm"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
 
-     
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
-
         {error && (
-          <p
-            className="text-red-500 mt-3 text-center text-sm"
-            aria-live="polite"
-          >
+          <p className="text-red-500 text-sm mt-3 text-center" aria-live="polite">
             {error}
           </p>
         )}
 
-      
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push("/forgot-password")}
-            className="text-blue-600 hover:underline"
+            className="text-emerald-600 hover:underline text-lg font-medium"
             type="button"
           >
             Forgot Password?
           </button>
         </div>
 
-
-        <p className="mt-4 text-center text-gray-600 text-sm">
+        <p className="text-gray-600 text-lg text-center mt-4">
           Don’t have an account?{" "}
           <button
             onClick={() => router.push("/signup")}
-            className="text-blue-600 font-medium hover:underline"
+            className="text-emerald-600 font-medium hover:underline"
             type="button"
           >
-            Sign up
+            Sign Up
           </button>
         </p>
       </div>
