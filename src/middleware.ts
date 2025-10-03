@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
+  const url = req.nextUrl;
 
   if (token && (req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/signup")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -13,11 +14,17 @@ export function middleware(req: NextRequest) {
   if (!token && req.nextUrl.pathname.startsWith("/change-password")) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
+  if (url.pathname.startsWith("/reset-password")) {
+      if (!token) {
+        url.pathname = "/forgot-password";
+        return NextResponse.redirect(url);
+      }
+    }
 
-
+  
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/login", "/signup", "/change-password", "/dashboard/:path*"],
+  matcher: ["/login", "/signup", "/change-password", "/dashboard/:path*", "/reset-password/:path*"],
 };
