@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb"; 
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { Resend } from "resend";
+import { generateToken } from "@/lib/jwt";
 
 export async function POST(request: Request) {
   try {
@@ -17,38 +17,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     } 
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: "Please enter a valid email address." },
-        { status: 400 }
-      );
-    }
-
-    if (username.length < 3) {
-      return NextResponse.json(
-        { success: false, error: "Username must be at least 3 characters." },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { success: false, error: "Password must be at least 8 characters." },
-        { status: 400 }
-      );
-    }
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Password must have at least 8 characters, including 1 uppercase and 1 number.",
-        },
-        { status: 400 }
-      );
-    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -65,11 +33,13 @@ export async function POST(request: Request) {
     });
 
     await newUser.save();
-    const token = jwt.sign(
-    { userId: newUser._id, email: newUser.email },
-    process.env.JWT_SECRET || "defaultsecret",
-    { expiresIn: "15m" }
-    );
+    const token = generateToken({ userId: newUser._id, email: email}, "15m");
+    if (!token) {
+      return NextResponse.json(
+        { error: "Could not generate verification token, please try again." },
+        { status: 500 }
+      );
+    }
 
     const resend = new Resend(process.env.RESEND_API_KEY);
         

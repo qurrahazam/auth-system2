@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/jwt";
 
 export async function POST(request: Request) {
   try {
@@ -17,12 +17,10 @@ export async function POST(request: Request) {
     }
 
     let decoded: any;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || "defaultsecret");
-    } catch (err) {
+    decoded = verifyToken(token);
+    if (!decoded) {
       return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 401 }
+        { error: "Invalid or expired token" }, { status: 401 }
       );
     }
 
@@ -31,23 +29,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "New password must be at least 8 characters long." },
-        { status: 400 }
-      );
-    }
-
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json(
-        {
-          error:
-            "New password must have at least 1 uppercase letter and 1 number.",
-        },
-        { status: 400 }
-      );
-    }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import User from "@/models/User";
 import { Resend } from 'resend';
 import { connectDB } from "@/lib/mongodb";
+import { generateToken } from "@/lib/jwt";
 
 export async function POST(request: Request) {
   try {
@@ -32,12 +32,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || "defaultsecret",
-      { expiresIn: "15m" }
-    );
-
+    const token = generateToken({ userId: user._id, email: email}, "15m");
+    if (!token) {
+      return NextResponse.json(
+        { error: "Could not generate reset token, please try again." },
+        { status: 500 }
+      );
+    }
 
     const resend = new Resend(process.env.RESEND_API_KEY);
     

@@ -25,24 +25,6 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-    
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "New password must be at least 8 characters long." },
-        { status: 400 }
-      );
-    }
-
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json(
-        {
-          error:
-            "New password must have at least 1 uppercase letter and 1 number.",
-        },
-        { status: 400 }
-      );
-    }
 
     const user = await User.findById(decoded.userId);
     if (!user) {
