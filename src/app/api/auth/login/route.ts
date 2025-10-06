@@ -25,6 +25,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const isVerified = await user.isVerified;
+    if (!isVerified) {
+      return NextResponse.json(
+        { message: "Please verify your email before logging in." },
+        { status: 403 }
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
