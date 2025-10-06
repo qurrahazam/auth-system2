@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb"; 
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { Resend } from "resend";
 
 export async function POST(request: Request) {
   try {
@@ -59,12 +61,36 @@ export async function POST(request: Request) {
       email,
       username,
       password: hashedPassword,
+      isVerified: false,
     });
 
     await newUser.save();
+    const token = jwt.sign(
+    { userId: newUser._id, email: newUser.email },
+    process.env.JWT_SECRET || "defaultsecret",
+    { expiresIn: "15m" }
+    );
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+        
+    const resetLink = `${process.env.FRONTEND_URL}/verify?token=${token}`;
+
+    await resend.emails.send({
+    from: 'onboarding@resend.dev',
+    to: email,
+    subject: 'Verify Your Email',
+    html: `
+        <p>Hello,</p>
+        <p>You need to verify your account. Click the link below to continue:</p>
+        <p><a href="${resetLink}" target="_blank">Verfication Link</a></p>
+        <p>This link will expire in 15 minutes.</p>
+        <p>If you didn’t request this, you can ignore this email.</p>
+    `,
+    });
+
 
     return NextResponse.json(
-      { success: true, message: "User registered successfully", user: newUser },
+      { success: true, message: "User registered successfully, Verify Email to continue"},
       { status: 201 }
     );
   } catch (err: any) {
