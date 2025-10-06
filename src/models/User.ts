@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password: string; 
   createdAt: Date;
   updatedAt: Date;
+  isVerified: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -35,6 +36,10 @@ const userSchema = new Schema<IUser>(
         message:
           "Password must have at least 8 characters, including 1 uppercase and 1 number.",
       },
+    },
+    isVerified: { 
+      type: Boolean, 
+      default: false 
     },
   },
   { timestamps: true }
