@@ -25,20 +25,7 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: "Current password is incorrect" },
-        { status: 400 }
-      );
-    }
-
+    
     if (newPassword.length < 8) {
       return NextResponse.json(
         { error: "New password must be at least 8 characters long." },
@@ -56,6 +43,20 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return NextResponse.json(
+        { error: "Current password is incorrect" },
+        { status: 400 }
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
