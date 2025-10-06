@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthLayout from "@/components/layouts/AuthLayout";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,11 +38,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          Welcome
-        </h1>
+    <AuthLayout title="Login" subtitle="Welcome back! Please login to your account">
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
@@ -106,7 +103,6 @@ export default function LoginPage() {
             Sign Up
           </button>
         </p>
-      </div>
-    </div>
+        </AuthLayout>
   );
 }

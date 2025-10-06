@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthLayout from "@/components/layouts/AuthLayout";
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -42,11 +43,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          Forgot Password
-        </h1>
+    <AuthLayout title="Forgot Password" subtitle="Reset your password">
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
@@ -84,7 +81,6 @@ export default function ForgotPassword() {
             Login
           </button>
         </p>
-      </div>
-    </div>
+        </AuthLayout>
   );
 }

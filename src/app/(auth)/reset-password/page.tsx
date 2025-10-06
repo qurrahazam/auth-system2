@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { isStrongPassword } from "@/lib/validators";
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -17,6 +19,11 @@ export default function ResetPasswordPage() {
 
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match");
+      return;
+    }
+    const passwordValidation = isStrongPassword(newPassword);
+    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
+      setMessage(passwordValidation.message || "Weak password.");
       return;
     }
 
@@ -41,11 +48,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          Reset Password
-        </h2>
+    <AuthLayout title="Reset Password" subtitle="Set a new password for your account">
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
@@ -96,7 +99,6 @@ export default function ResetPasswordPage() {
             Login
           </button>
         </p>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }

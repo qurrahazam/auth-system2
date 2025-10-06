@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { isStrongPassword } from "@/lib/validators";
+
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -15,6 +18,11 @@ export default function ChangePasswordPage() {
 
     if (newPassword !== confirmPassword) {
       setMessage("New passwords do not match");
+      return;
+    }
+    const passwordValidation = isStrongPassword(newPassword);
+    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
+      setMessage(passwordValidation.message || "Weak password.");
       return;
     }
 
@@ -46,12 +54,7 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          Change Password
-        </h2>
-
+    <AuthLayout title="Change Password" subtitle="Update your account password">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="password"
@@ -110,7 +113,6 @@ export default function ChangePasswordPage() {
             Login
           </button>
         </p>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }

@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { isValidEmail, isStrongPassword, validateUsername } from "@/lib/validators";
+
+
+
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,6 +18,26 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    const usernameValidation = validateUsername(username);
+    if (typeof usernameValidation === "object" && !usernameValidation.valid) {
+      setError(usernameValidation.message || "Invalid username.");
+      return;
+    }
+
+    const passwordValidation = isStrongPassword(password);
+    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
+      setError(passwordValidation.message || "Weak password.");
+      return;
+    }
+
+    setError("");
+  
 
     const res = await fetch("/api/auth/signup", {
       method: "POST",
@@ -29,11 +54,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-center text-emerald-600 mb-6">
-          Create an Account
-        </h1>
+    <AuthLayout title="Sign Up" subtitle="Create a new account">
 
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <input
@@ -88,7 +109,6 @@ export default function SignupPage() {
             Login
           </a>
         </p>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }
