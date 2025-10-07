@@ -4,6 +4,7 @@ import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { generateToken } from "@/lib/jwt";
+import { isValidEmail, isStrongPassword} from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +18,25 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     } 
+
+    if (isValidEmail(email) === false) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
+        { status: 400 }
+      );
+    }
+
+    const passwordValidation = isStrongPassword(password);
+    if (
+      (typeof passwordValidation === "boolean" && passwordValidation === false) ||
+      (typeof passwordValidation === "object" && passwordValidation.valid === false)
+    ) {
+      return NextResponse.json(
+        { error: typeof passwordValidation === "object" && passwordValidation.message ? passwordValidation.message : "Password is not strong enough." },
+        { status: 400 }
+      );
+    }
+    
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {

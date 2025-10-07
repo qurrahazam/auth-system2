@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { verifyToken } from "@/lib/jwt";
+import { isStrongPassword } from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,21 @@ export async function POST(request: Request) {
     if (!decoded) {
       return NextResponse.json(
         { error: "Invalid or expired token" }, { status: 401 }
+      );
+    }
+
+    if (!newPassword) {
+      return NextResponse.json(
+        { error: "New password is required" },
+        { status: 400 }
+      );
+    }
+
+    const passwordValidation = isStrongPassword(newPassword);
+    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.message || "Weak password." },
+        { status: 400 }
       );
     }
 

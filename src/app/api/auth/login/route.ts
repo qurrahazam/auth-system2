@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { isValidEmail } from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +14,13 @@ export async function POST(request: Request) {
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
+    if (isValidEmail(email) === false) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
         { status: 400 }
       );
     }

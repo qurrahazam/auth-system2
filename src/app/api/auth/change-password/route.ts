@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { isStrongPassword } from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +24,21 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 401 }
+      );
+    }
+
+    if (!currentPassword || !newPassword) {
+      return NextResponse.json(
+        { error: "Current and new passwords are required" },
+        { status: 400 }
+      );
+    }
+
+    const passwordValidation = isStrongPassword(newPassword);
+    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.message || "Weak password." },
+        { status: 400 }
       );
     }
 

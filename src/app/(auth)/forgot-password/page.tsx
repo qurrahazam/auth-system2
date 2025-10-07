@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import { isValidEmail } from "@/lib/validators";
 
 export default function ForgotPassword() {
   const router = useRouter();
@@ -16,6 +17,10 @@ export default function ForgotPassword() {
     setError("");
     setMessage("");
     setLoading(true);
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
 
     try {
       const res = await fetch("/api/auth/forgot-password", {
