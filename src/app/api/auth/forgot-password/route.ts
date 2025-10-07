@@ -3,6 +3,7 @@ import User from "@/models/User";
 import { Resend } from 'resend';
 import { connectDB } from "@/lib/mongodb";
 import { generateToken } from "@/lib/jwt";
+import { isValidEmail } from "@/lib/validators";
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +17,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(email)) {
+ 
+    if (isValidEmail(email) === false) {
       return NextResponse.json(
         { error: "Please enter a valid email address." },
         { status: 400 }
