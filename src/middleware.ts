@@ -3,28 +3,26 @@ import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
   const token = req.cookies.get("token")?.value;
-  const url = req.nextUrl;
+  const { pathname, origin } = req.nextUrl;
 
-  if (token && (req.nextUrl.pathname === "/login" || req.nextUrl.pathname === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (token && ["/login", "/signup", "/forgot-password", "/reset-password"].includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", origin));
   }
-  if (!token && req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-  if (!token && req.nextUrl.pathname.startsWith("/change-password")) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-  if (url.pathname.startsWith("/reset-password")) {
-      if (!token) {
-        url.pathname = "/forgot-password";
-        return NextResponse.redirect(url);
-      }
-    }
 
-  
+  const protectedRoutes = ["/dashboard", "/change-password"];
+
+  if (!token && protectedRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/login", origin));
+  }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/login", "/signup", "/change-password", "/dashboard/:path*", "/reset-password/:path*"],
+  matcher: [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/dashboard/:path*",
+    "/change-password",
+  ],
 };
