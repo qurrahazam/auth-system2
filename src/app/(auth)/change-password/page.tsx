@@ -11,10 +11,12 @@ export default function ChangePasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     if (newPassword !== confirmPassword) {
       setMessage("New passwords do not match");
@@ -50,6 +52,8 @@ export default function ChangePasswordPage() {
       }
     } catch (error) {
       setMessage("Network error. Please check your internet connection.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,7 +89,7 @@ export default function ChangePasswordPage() {
 
           {message && (
             <p
-              className={`text-center text-sm ${
+              className={`text-center text-lg ${
                 message.toLowerCase().includes("success")
                   ? "text-green-600"
                   : "text-red-500"
@@ -99,7 +103,7 @@ export default function ChangePasswordPage() {
             type="submit"
             className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
           >
-            Update Password
+            {loading ? "Updating..." : "Update Password"}
           </button>
         </form>
 
