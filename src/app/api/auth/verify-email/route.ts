@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     }
 
     user.isVerified = true;
+    user.verificationExpiresAt = undefined;
     await user.save();
 
     return NextResponse.json({ message: "Email verified successfully" });
