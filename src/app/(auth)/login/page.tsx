@@ -28,7 +28,7 @@ export default function LoginPage() {
         router.push("/dashboard");
       } else {
         const data = await res.json();
-        setError(data.error || "Login failed");
+        setError(data.message || "Login failed");
       }
     } catch (err) {
       setError("Network error. Please try again.");
@@ -78,7 +78,7 @@ export default function LoginPage() {
         </form>
 
         {error && (
-          <p className="text-red-500 text-sm mt-3 text-center" aria-live="polite">
+          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
             {error}
           </p>
         )}
