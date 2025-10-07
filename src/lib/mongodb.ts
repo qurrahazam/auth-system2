@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
-// Following line avoid multiple connection issue in development.
 let cached = (global as any).mongoose;
 
 if (!cached) {
