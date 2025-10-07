@@ -45,7 +45,7 @@ const userSchema = new Schema<IUser>(
     verificationExpiresAt: { 
       type: Date, 
       default: Date.now, 
-      expires: 3600  // 1 hour 
+      expires: 1000  // 1 hour 
     },
   },
   { timestamps: true }
