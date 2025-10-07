@@ -1,8 +1,6 @@
 "Use Client";
-import { Inter } from "next/font/google";
-import { title } from "process";
+
 import React, { ReactNode } from "react";
-import { Interface } from "readline";
 
 
 interface AuthLayoutProps {
