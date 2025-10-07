@@ -65,10 +65,10 @@ export default function ForgotPassword() {
         </form>
 
         {message && (
-          <p className="mt-4 text-green-600 text-center text-sm">{message}</p>
+          <p className="mt-4 text-green-600 text-center text-lg">{message}</p>
         )}
         {error && (
-          <p className="mt-4 text-red-500 text-center text-sm">{error}</p>
+          <p className="mt-4 text-red-500 text-center text-lg">{error}</p>
         )}
 
         <p className="mt-6 text-center text-gray-600 text-lg">
