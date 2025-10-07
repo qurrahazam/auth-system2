@@ -7,6 +7,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   isVerified: boolean;
+  verificationExpiresAt: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -40,6 +41,11 @@ const userSchema = new Schema<IUser>(
     isVerified: { 
       type: Boolean, 
       default: false 
+    },
+    verificationExpiresAt: { 
+      type: Date, 
+      default: Date.now, 
+      expires: 3600  // 1 hour 
     },
   },
   { timestamps: true }
