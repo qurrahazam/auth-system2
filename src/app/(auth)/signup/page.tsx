@@ -7,7 +7,6 @@ import { isValidEmail, isStrongPassword, validateUsername } from "@/lib/validato
 
 
 
-
 export default function SignupPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -15,9 +14,12 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!isValidEmail(email)) {
       setError("Please enter a valid email address.");
@@ -36,7 +38,7 @@ export default function SignupPage() {
       return;
     }
 
-    setError("");
+    // setError("");
   
 
     const res = await fetch("/api/auth/signup", {
@@ -49,7 +51,7 @@ export default function SignupPage() {
       router.push("/login");
     } else {
       const data = await res.json();
-      setError(data.error || "Signup failed");
+      setError(data.message || "Signup failed");
     }
   };
 
@@ -97,11 +99,11 @@ export default function SignupPage() {
             type="submit"
             className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
           >
-            Sign Up
+            {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
 
-        {error && <p className="text-red-500 text-sm mt-3 text-center">{error}</p>}
+        {error && <p className="text-red-500 text-lg mt-3 text-center">{error}</p>}
 
         <p className="text-gray-600 text-lg text-center mt-6">
           Already have an account?{" "}
