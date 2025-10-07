@@ -53,7 +53,8 @@ export async function POST(request: Request) {
         <p>Hello,</p>
         <p>You need to verify your account. Click the link below to continue:</p>
         <p><a href="${resetLink}" target="_blank">Verfication Link</a></p>
-        <p>This link will expire in 15 minutes.</p>
+        <p>This link will expire in 15 minutes. If you are unable to verify in this given time you would have to 
+        sign-up again</p>
         <p>If you didn’t request this, you can ignore this email.</p>
     `,
     });
