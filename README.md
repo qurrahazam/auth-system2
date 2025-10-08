@@ -1,5 +1,4 @@
-```markdown
-# 🔐 Next.js Authentication System
+### 🔐 Next.js Authentication System
 
 A **compact authentication module** built with **Next.js (App Router)** and **MongoDB**.  
 It includes signup/login/logout, email verification, password reset, and password change — all using JWT stored in secure HttpOnly cookies.  
@@ -15,7 +14,7 @@ Intended as a lightweight, drop-in starting point for full-stack Next.js apps.
 
 ## 📂 Project Structure
 
-```
+```bash
 app/              — pages and API route handlers (app/api/auth/*/route.ts)
 lib/              — db.ts for MongoDB connection + JWT helpers
 models/           — User.ts Mongoose model
