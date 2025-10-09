@@ -23,18 +23,21 @@ export default function SignupPage() {
 
     if (!isValidEmail(email)) {
       setError("Please enter a valid email address.");
+      setLoading(false);
       return;
     }
 
     const usernameValidation = validateUsername(username);
     if (typeof usernameValidation === "object" && !usernameValidation.valid) {
       setError(usernameValidation.message || "Invalid username.");
+      setLoading(false);
       return;
     }
 
     const passwordValidation = isStrongPassword(password);
     if (typeof passwordValidation === "object" && !passwordValidation.valid) {
       setError(passwordValidation.message || "Weak password.");
+      setLoading(false);
       return;
     }
 
@@ -51,7 +54,8 @@ export default function SignupPage() {
       router.push("/login");
     } else {
       const data = await res.json();
-      setError(data.message || "Signup failed");
+      setError(data.error || "Signup failed");
+      setLoading(false);
     }
   };
 
