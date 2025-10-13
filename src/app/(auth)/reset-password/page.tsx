@@ -1,104 +1,113 @@
 "use client";
 
+import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { resetPasswordSchema } from "@/lib/resetPasswordSchema";
+import { z } from "zod";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
-import { isStrongPassword } from "@/lib/validators";
+
+type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
+  const [serverError, setServerError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token") || "";
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ResetPasswordData>({
+    resolver: zodResolver(resetPasswordSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (newPassword !== confirmPassword) {
-      setMessage("Passwords do not match");
-      return;
-    }
-    const passwordValidation = isStrongPassword(newPassword);
-    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
-      setMessage(passwordValidation.message || "Weak password.");
-      return;
-    }
-
+  const onSubmit = async (data: ResetPasswordData) => {
     try {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({
+          token,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
+        }),
+
       });
 
-      const data = await res.json();
+      const result = await res.json();
 
       if (res.ok) {
-        setMessage(data.message || "Password reset successfully!");
-        setTimeout(() => router.push("/login"), 3000);
+        reset();
+        setSuccessMessage("Password reset successfully! Redirecting to login...");
+        setTimeout(() => {
+          router.push("/login");
+        }, 3000);
       } else {
-        setMessage(data.error || "Something went wrong");
+        setServerError(result.error || "Failed to reset password. Please try again.");
       }
-    } catch (error) {
-      setMessage("Network error. Please try again.");
+    } catch {
+      setServerError("Server error. Please try again later.");
     }
   };
 
   return (
-    <AuthLayout title="Reset Password" subtitle="Set a new password for your account">
+    <AuthLayout
+      title="Reset Password"
+      subtitle="Set a new password for your account"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <input
+          type="password"
+          placeholder="New Password"
+          {...register("newPassword")}
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+        />
+        {errors.newPassword && (
+          <p className="text-red-500 text-sm">{errors.newPassword.message}</p>
+        )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input
-            type="password"
-            placeholder="New Password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
-            required
-          />
+        <input
+          type="password"
+          placeholder="Confirm New Password"
+          {...register("confirmPassword")}
+          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+        />
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
+        )}
 
-          <input
-            type="password"
-            placeholder="Confirm New Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
-            required
-          />
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+        >
+          {isSubmitting ? "Updating..." : "Update Password"}
+        </button>
+        {successMessage && (
+          <p className="text-green-500 text-lg mt-3 text-center">{successMessage}</p>
+        )}
+        {serverError && (
+          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
+            {serverError}
+          </p>
+        )}
+      </form>
 
-          {message && (
-            <p
-              className={`text-center text-sm ${
-                message.toLowerCase().includes("success")
-                  ? "text-green-600"
-                  : "text-red-500"
-              }`}
-            >
-              {message}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
-          >
-            Update Password
-          </button>
-        </form>
-
-        <p className="text-gray-600 text-lg text-center mt-6">
-          Back to{" "}
-          <button
-            onClick={() => router.push("/login")}
-            className="text-emerald-600 font-medium hover:underline"
-            type="button"
-          >
-            Login
-          </button>
-        </p>
+      <p className="text-gray-600 text-lg text-center mt-6">
+        Back to{" "}
+        <button
+          onClick={() => router.push("/login")}
+          className="text-emerald-600 font-medium hover:underline"
+          type="button"
+        >
+          Login
+        </button>
+      </p>
     </AuthLayout>
   );
 }

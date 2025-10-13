@@ -1,113 +1,56 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "@/lib/loginSchema";
+import { z } from "zod";
 import AuthLayout from "@/components/layouts/AuthLayout";
-import { isValidEmail } from "@/lib/validators";
+
+type LoginData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
+  const onSubmit = async (data: LoginData) => {
+    setServerError("");
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      if (res.ok) {
-        router.push("/dashboard");
-      } else {
-        const data = await res.json();
-        setError(data.message || "Login failed");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+    if (res.ok) router.push("/dashboard");
+    else {
+      const err = await res.json();
+      setServerError(err.error || "Login failed. Please try again.");
     }
   };
 
   return (
-    <AuthLayout title="Login" subtitle="Welcome back! Please login to your account">
+    <AuthLayout title="Login" subtitle="Welcome! Please login to your account">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <input {...register("email")} placeholder="Email" className="px-4 py-2 border rounded-lg" />
+        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
-            required
-          />
+        <input {...register("password")} type="password" placeholder="Password" className="px-4 py-2 border rounded-lg" />
+        {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
 
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none pr-10"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-emerald-600 text-sm"
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {error && (
-          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
-            {error}
-          </p>
-        )}
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push("/forgot-password")}
-            className="text-emerald-600 hover:underline text-lg font-medium"
-            type="button"
-          >
-            Forgot Password?
-          </button>
-        </div>
-
-        <p className="text-gray-600 text-lg text-center mt-4">
-          Don’t have an account?{" "}
-          <button
-            onClick={() => router.push("/signup")}
-            className="text-emerald-600 font-medium hover:underline"
-            type="button"
-          >
-            Sign Up
-          </button>
-        </p>
-        </AuthLayout>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+        >
+          {isSubmitting ? "Logging in..." : "Login"}
+          
+        </button><div className="mt-2 text-center"> <button onClick={() => router.push("/forgot-password")} className="text-emerald-600 hover:underline text-lg font-medium" type="button" > Forgot Password? </button> </div>
+        {serverError && ( <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite"> {serverError} </p> )}
+      </form>
+    </AuthLayout>
   );
 }

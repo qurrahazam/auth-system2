@@ -2,119 +2,114 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "@/components/layouts/AuthLayout";
-import { isValidEmail, isStrongPassword, validateUsername } from "@/lib/validators";
-
+import { signupSchema, SignupFormData } from "@/lib/signupSchema";
 
 
 export default function SignupPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [suceessMessage, setSuccessMessage] = useState("");
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    if (!isValidEmail(email)) {
-      setError("Please enter a valid email address.");
-      setLoading(false);
-      return;
-    }
-
-    const usernameValidation = validateUsername(username);
-    if (typeof usernameValidation === "object" && !usernameValidation.valid) {
-      setError(usernameValidation.message || "Invalid username.");
-      setLoading(false);
-      return;
-    }
-
-    const passwordValidation = isStrongPassword(password);
-    if (typeof passwordValidation === "object" && !passwordValidation.valid) {
-      setError(passwordValidation.message || "Weak password.");
-      setLoading(false);
-      return;
-    }
-
-    // setError("");
-  
+  const onSubmit = async (data: SignupFormData) => {
+    setServerError("");
 
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify(data),
     });
 
     if (res.ok) {
-      router.push("/login");
+      setSuccessMessage("Signup successful! Please verify your email.");
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000);
     } else {
-      const data = await res.json();
-      setError(data.error || "Signup failed");
-      setLoading(false);
+      const result = await res.json();
+      setServerError(result.error || "Signup failed. Try again.");
     }
   };
 
   return (
     <AuthLayout title="Sign Up" subtitle="Create a new account">
-
-        <form onSubmit={handleSignup} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <div>
           <input
+            {...register("username")}
             type="text"
             placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
           />
+          {errors.username && (
+            <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+          )}
+        </div>
 
+        <div>
           <input
+            {...register("email")}
             type="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none"
           />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+          )}
+        </div>
 
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-emerald-600 text-sm"
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-
+        <div className="relative">
+          <input
+            {...register("password")}
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-400 outline-none pr-10"
+          />
           <button
-            type="submit"
-            className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-emerald-600 text-sm"
           >
-            {loading ? "Signing up..." : "Sign Up"}
+            {showPassword ? "Hide" : "Show"}
           </button>
-        </form>
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+          )}
+        </div>
 
-        {error && <p className="text-red-500 text-lg mt-3 text-center">{error}</p>}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
+        >
+          {isSubmitting ? "Signing up..." : "Sign Up"}
+        </button>
+      </form>
+      {suceessMessage && (
+        <p className="text-green-500 text-lg mt-3 text-center">{suceessMessage}</p>
+      )}
 
-        <p className="text-gray-600 text-lg text-center mt-6">
-          Already have an account?{" "}
-          <a href="/login" className="text-emerald-600 font-medium hover:underline">
-            Login
-          </a>
-        </p>
+      {serverError && (
+        <p className="text-red-500 text-lg mt-3 text-center">{serverError}</p>
+      )}
+
+      <p className="text-gray-600 text-lg text-center mt-6">
+        Already have an account?{" "}
+        <a href="/login" className="text-emerald-600 font-medium hover:underline">
+          Login
+        </a>
+      </p>
     </AuthLayout>
   );
 }
