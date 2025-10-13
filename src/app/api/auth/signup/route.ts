@@ -1,46 +1,28 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb"; 
+import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import { Resend } from "resend";
 import { generateToken } from "@/lib/jwt";
-import { isValidEmail, isStrongPassword} from "@/lib/validators";
+import { resendEmail } from "@/lib/Resend-email";
+import { signupSchema } from "@/lib/signupSchema";
 
 export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const { email, username, password } = await request.json();
+    const body = await request.json();
+    const parsed = signupSchema.safeParse(body);
 
-    if (!email || !username || !password) {
-      return NextResponse.json(
-        { success: false, error: "All fields are required." },
-        { status: 400 }
-      );
-    } 
-
-    if (isValidEmail(email) === false) {
-      return NextResponse.json(
-        { error: "Please enter a valid email address." },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message || "Invalid input data.";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    const passwordValidation = isStrongPassword(password);
-    if (
-      (typeof passwordValidation === "boolean" && passwordValidation === false) ||
-      (typeof passwordValidation === "object" && passwordValidation.valid === false)
-    ) {
-      return NextResponse.json(
-        { error: typeof passwordValidation === "object" && passwordValidation.message ? passwordValidation.message : "Password is not strong enough." },
-        { status: 400 }
-      );
-    }
-    
+    const { email, username, password } = parsed.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: "Email already registered" }, { status: 400 });
+      return NextResponse.json({ error: "Email already registered." }, { status: 409 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -53,7 +35,8 @@ export async function POST(request: Request) {
     });
 
     await newUser.save();
-    const token = generateToken({ userId: newUser._id, email: email}, "15m");
+
+    const token = generateToken({ userId: newUser._id, email }, "15m");
     if (!token) {
       return NextResponse.json(
         { error: "Could not generate verification token, please try again." },
@@ -61,33 +44,38 @@ export async function POST(request: Request) {
       );
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-        
-    const resetLink = `${process.env.FRONTEND_URL}/verify?token=${token}`;
-
-    await resend.emails.send({
-    from: 'onboarding@resend.dev',
-    to: email,
-    subject: 'Verify Your Email',
-    html: `
-        <p>Hello,</p>
-        <p>You need to verify your account. Click the link below to continue:</p>
-        <p><a href="${resetLink}" target="_blank">Verfication Link</a></p>
-        <p>This link will expire in 15 minutes. If you are unable to verify in this given time you would have to 
-        sign-up again</p>
-        <p>If you didn’t request this, you can ignore this email.</p>
-    `,
-    });
-
+    const emailBody = `
+      <p>Hello,</p>
+      <p>You need to verify your account. Click the link below to continue:</p>
+      <p><a href="{RESET_LINK}" target="_blank">Verification Link</a></p>
+      <p>This link will expire in 15 minutes. If you are unable to verify in this given time, you will have to sign up again.</p>
+      <p>If you didn’t request this, you can ignore this email.</p>
+    `;
+    await resendEmail(email, "Verification Email", emailBody, token, "verify");
 
     return NextResponse.json(
-      { success: true, message: "User registered successfully, Verify Email to continue"},
+      { success: true, message: "User registered successfully. Verify your email to continue." },
       { status: 201 }
     );
-  } catch (err: any) {
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 }
-    );
+  } catch (error: any) {
+  
+      if (error.name === "MongoServerError") {
+        return NextResponse.json(
+          { message: "Database error, please try again later." },
+          { status: 503 }
+        );
+      }
+  
+      if (error.name === "JsonWebTokenError") {
+        return NextResponse.json(
+          { message: "Invalid token." },
+          { status: 401 }
+        );
+      }
+  
+      return NextResponse.json(
+        { message: "Unexpected server error" },
+        { status: 500 }
+      );
+    }
   }
-}

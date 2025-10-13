@@ -2,41 +2,34 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { isValidEmail } from "@/lib/validators";
+import { generateToken } from "@/lib/jwt";
+import { loginSchema } from "@/lib/loginSchema";
 
 export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const parseResult = loginSchema.safeParse(body);
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { message: "Email and password are required" },
-        { status: 400 }
-      );
+    if (!parseResult.success) {
+      const errorMessage = parseResult.error.issues[0]?.message || "Invalid input.";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    if (isValidEmail(email) === false) {
-      return NextResponse.json(
-        { error: "Please enter a valid email address." },
-        { status: 400 }
-      );
-    }
+    const { email, password } = parseResult.data;
 
     const user = await User.findOne({ email });
     if (!user) {
       return NextResponse.json(
-        { message: "Invalid email or password" },
+        { error: "Invalid email or password." },
         { status: 401 }
       );
     }
 
-    const isVerified = await user.isVerified;
-    if (!isVerified) {
+    if (!user.isVerified) {
       return NextResponse.json(
-        { message: "Please verify your email before logging in." },
+        { error: "Please verify your email before logging in." },
         { status: 403 }
       );
     }
@@ -44,49 +37,52 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { message: "Invalid email or password" },
+        { error: "Invalid email or password." },
         { status: 401 }
       );
     }
 
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      process.env.JWT_SECRET || "defaultsecret",
-      { expiresIn: "1h" }
-    );
+    const token = generateToken({ userId: user._id, email: user.email }, "1h");
+    if (!token) {
+      return NextResponse.json(
+        { error: "Could not generate authentication token. Please try again." },
+        { status: 500 }
+      );
+    }
 
     const response = NextResponse.json(
-      { message: "Login successful" },
+      { message: "Login successful." },
       { status: 200 }
     );
 
     response.cookies.set("token", token, {
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === "production", 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      path: "/", 
-      maxAge: 60 * 60, 
+      path: "/",
+      maxAge: 60 * 60,
     });
 
     return response;
   } catch (error: any) {
+    console.error("Login error:", error);
 
     if (error.name === "MongoServerError") {
       return NextResponse.json(
-        { message: "Database error, please try again later." },
+        { error: "Database error. Please try again later." },
         { status: 503 }
       );
     }
 
     if (error.name === "JsonWebTokenError") {
       return NextResponse.json(
-        { message: "Invalid token." },
+        { error: "Invalid token." },
         { status: 401 }
       );
     }
 
     return NextResponse.json(
-      { message: "Unexpected server error" },
+      { error: "Unexpected server error. Please try again later." },
       { status: 500 }
     );
   }
