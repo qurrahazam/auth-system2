@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { verifyToken } from "@/lib/jwt";
-import { resetPasswordSchema } from "@/lib/resetPasswordSchema";
+import { resetPasswordSchema } from "@/lib/ResetPasswordSchema";
+import { successResponse, errorResponse } from "@/lib/ApiResponse";
+import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +15,11 @@ export async function POST(request: Request) {
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error.issues[0]?.message || "Invalid input.";
-      return NextResponse.json({ error: errorMessage }, { status: 400 });
+      return errorResponse({
+                          error: errorMessage,
+                          message: "Validation failed",
+                          status: HTTP_STATUS.BAD_REQUEST,
+                        });
     }
 
     const { newPassword } = parseResult.data;
@@ -22,38 +27,50 @@ export async function POST(request: Request) {
    
     const { token } = body; 
     if (!token) {
-      return NextResponse.json({ error: "Token is required" }, { status: 400 });
+      return errorResponse({
+                          error: "Token is required.",
+                          message: "Validation failed",
+                          status: HTTP_STATUS.BAD_REQUEST,
+                        });
     }
 
     let decoded_token: any;
     decoded_token = verifyToken(token);
     if (!decoded_token) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" }, { status: 401 }
-      );
+      return errorResponse({
+                          error: "Invalid or expired token.",
+                          message: "Token verification failed",
+                          status: HTTP_STATUS.UNAUTHORIZED,
+                        });
     }
 
     const user = await User.findById(decoded_token.userId);
     if (!user) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+      return errorResponse({
+                          error: "User not found.",
+                          message: "No user with this token exists",
+                          status: HTTP_STATUS.NOT_FOUND,
+                        });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
-    const response = NextResponse.json(
-      { message: "Password reset successfully. You are being redirected to login." },
-      { status: 200 }
-    );
+    const response = successResponse({
+      data: null,
+      message: "Reset Password Successfully",
+      status: HTTP_STATUS.OK
+    });
 
     response.cookies.set("token", "", { maxAge: 0, path: "/" });
     return response;
+
   } catch (error) {
-    console.error("Reset password error:", error);
-    return NextResponse.json(
-      { error: "Server error. Please try again later." },
-      { status: 500 }
-    );
+    return errorResponse({
+                        error: "Server error. Please try again later.",
+                        message: "Password reset failed",
+                        status: HTTP_STATUS.SERVER_ERROR,
+                      });
   }
 }

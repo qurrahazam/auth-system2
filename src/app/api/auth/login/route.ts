@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { generateToken } from "@/lib/jwt";
-import { loginSchema } from "@/lib/loginSchema";
+import { loginSchema } from "@/lib/LoginSchema";
+import { successResponse, errorResponse } from "@/lib/ApiResponse";
+import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(request: Request) {
   try {
@@ -14,46 +15,56 @@ export async function POST(request: Request) {
 
     if (!parseResult.success) {
       const errorMessage = parseResult.error.issues[0]?.message || "Invalid input.";
-      return NextResponse.json({ error: errorMessage }, { status: 400 });
+      return errorResponse({
+                    error: errorMessage,
+                    message: "Validation failed",
+                    status: HTTP_STATUS.BAD_REQUEST,
+                  });
     }
 
     const { email, password } = parseResult.data;
 
     const user = await User.findOne({ email });
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
+      return errorResponse({
+                    error: "Invalid email or password.",
+                    message: "Authentication failed",
+                    status: HTTP_STATUS.UNAUTHORIZED,
+                  }
       );
     }
 
     if (!user.isVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email before logging in." },
-        { status: 403 }
-      );
+      return errorResponse({
+                    error: "Email not verified. Please verify your email before logging in.",
+                    message: "Email not verified",
+                    status: HTTP_STATUS.FORBIDDEN,
+                  });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
+      return errorResponse({
+                    error: "Invalid email or password.",
+                    message: "Authentication failed",
+                    status: HTTP_STATUS.UNAUTHORIZED,
+                  });
     }
 
     const token = generateToken({ userId: user._id, email: user.email }, "1h");
     if (!token) {
-      return NextResponse.json(
-        { error: "Could not generate authentication token. Please try again." },
-        { status: 500 }
-      );
+      return errorResponse({
+                    error: "Could not generate authentication token. Please try again.",
+                    message: "Token generation failed",
+                    status: HTTP_STATUS.SERVER_ERROR,
+                  });
     }
 
-    const response = NextResponse.json(
-      { message: "Login successful." },
-      { status: 200 }
-    );
+    const response = successResponse({
+      data: null,
+      message: "Login Successfully",
+      status: HTTP_STATUS.OK,
+    });
 
     response.cookies.set("token", token, {
       httpOnly: true,
@@ -64,26 +75,29 @@ export async function POST(request: Request) {
     });
 
     return response;
+
   } catch (error: any) {
-    console.error("Login error:", error);
 
     if (error.name === "MongoServerError") {
-      return NextResponse.json(
-        { error: "Database error. Please try again later." },
-        { status: 503 }
-      );
+      return errorResponse({
+        error: "Database connection error. Please try again later.",
+        message: "Database error",
+        status: HTTP_STATUS.SERVICE_UNAVAILABLE,
+      });
     }
 
     if (error.name === "JsonWebTokenError") {
-      return NextResponse.json(
-        { error: "Invalid token." },
-        { status: 401 }
-      );
+      return errorResponse({
+        error: "Error generating token. Please try again.",
+        message: "Token error",
+        status: HTTP_STATUS.SERVER_ERROR,
+      });
     }
 
-    return NextResponse.json(
-      { error: "Unexpected server error. Please try again later." },
-      { status: 500 }
-    );
+    return errorResponse({
+      error: error.message,
+      message: "Unexpected server error.",
+      status: HTTP_STATUS.SERVER_ERROR,
+    });
   }
 }

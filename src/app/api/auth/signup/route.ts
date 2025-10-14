@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { generateToken } from "@/lib/jwt";
 import { resendEmail } from "@/lib/Resend-email";
-import { signupSchema } from "@/lib/signupSchema";
+import { signupSchema } from "@/lib/SignupSchema";
+import { successResponse, errorResponse } from "@/lib/ApiResponse";
+import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(request: Request) {
   try {
@@ -15,14 +16,22 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       const errorMessage = parsed.error.issues[0]?.message || "Invalid input data.";
-      return NextResponse.json({ error: errorMessage }, { status: 400 });
+       return errorResponse({
+                                error: errorMessage,
+                                message: "Validation failed",
+                                status: HTTP_STATUS.BAD_REQUEST,
+                              });
     }
 
     const { email, username, password } = parsed.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: "Email already registered." }, { status: 409 });
+      return errorResponse({
+              error: "Registration failed",
+              message: "Email is already registered.",
+              status: HTTP_STATUS.CONFLICT,
+            });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -38,10 +47,11 @@ export async function POST(request: Request) {
 
     const token = generateToken({ userId: newUser._id, email }, "15m");
     if (!token) {
-      return NextResponse.json(
-        { error: "Could not generate verification token, please try again." },
-        { status: 500 }
-      );
+      return errorResponse({
+              error: "Could not generate verification token. Please try again.",
+              message: "Token generation failed",
+              status: HTTP_STATUS.SERVER_ERROR,
+            });
     }
 
     const emailBody = `
@@ -53,29 +63,34 @@ export async function POST(request: Request) {
     `;
     await resendEmail(email, "Verification Email", emailBody, token, "verify");
 
-    return NextResponse.json(
-      { success: true, message: "User registered successfully. Verify your email to continue." },
-      { status: 201 }
-    );
+    return successResponse({
+      data: null,
+      message: "User registered successfully. Please check your email to verify your account.",
+      status: HTTP_STATUS.CREATED,
+    });
   } catch (error: any) {
   
       if (error.name === "MongoServerError") {
-        return NextResponse.json(
-          { message: "Database error, please try again later." },
-          { status: 503 }
-        );
+        return errorResponse({
+          error: "Database connection error. Please try again later.",
+          message: "Database error",
+          status: HTTP_STATUS.SERVICE_UNAVAILABLE,
+        });
       }
   
       if (error.name === "JsonWebTokenError") {
-        return NextResponse.json(
-          { message: "Invalid token." },
-          { status: 401 }
-        );
+        return errorResponse({
+          error: "Error generating token. Please try again.",
+          message: "Token error",
+          status: HTTP_STATUS.SERVER_ERROR,
+        });
       }
   
-      return NextResponse.json(
-        { message: "Unexpected server error" },
-        { status: 500 }
+      return errorResponse({
+        error: error.message,
+        message: "Unexpected server error.",
+        status: HTTP_STATUS.SERVER_ERROR,
+      }
       );
     }
   }
