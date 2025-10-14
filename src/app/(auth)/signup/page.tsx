@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AuthLayout from "@/components/layouts/AuthLayout";
-import { signupSchema, SignupFormData } from "@/lib/signupSchema";
+import { signupSchema, SignupFormData } from "@/lib/SignupSchema";
+import toast from "react-hot-toast";
 
 
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState("");
-  const [suceessMessage, setSuccessMessage] = useState("");
 
   const {
     register,
@@ -23,7 +22,6 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: SignupFormData) => {
-    setServerError("");
 
     const res = await fetch("/api/auth/signup", {
       method: "POST",
@@ -32,13 +30,13 @@ export default function SignupPage() {
     });
 
     if (res.ok) {
-      setSuccessMessage("Signup successful! Please verify your email.");
+      toast.success("Signup successful! Redirecting to login...");
       setTimeout(() => {
         router.push("/login");
-      }, 3000);
+      }, 2000);
     } else {
       const result = await res.json();
-      setServerError(result.error || "Signup failed. Try again.");
+      toast.error(result.message || "Signup failed. Please try again.");
     }
   };
 
@@ -96,14 +94,6 @@ export default function SignupPage() {
           {isSubmitting ? "Signing up..." : "Sign Up"}
         </button>
       </form>
-      {suceessMessage && (
-        <p className="text-green-500 text-lg mt-3 text-center">{suceessMessage}</p>
-      )}
-
-      {serverError && (
-        <p className="text-red-500 text-lg mt-3 text-center">{serverError}</p>
-      )}
-
       <p className="text-gray-600 text-lg text-center mt-6">
         Already have an account?{" "}
         <a href="/login" className="text-emerald-600 font-medium hover:underline">

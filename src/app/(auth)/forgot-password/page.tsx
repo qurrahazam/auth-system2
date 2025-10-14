@@ -1,20 +1,17 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { forgotPasswordSchema } from "@/lib/forgotPasswordSchema";
+import { forgotPasswordSchema } from "@/lib/ForgotPasswordSchema";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 type FormData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const [serverMessage, setServerMessage] = useState("");
-  const [serverError, setServerError] = useState("");
-
   const {
     register,
     handleSubmit,
@@ -34,14 +31,14 @@ export default function ForgotPasswordPage() {
 
       const result = await res.json();
 
-      if (res.ok) {
-        setServerMessage("If that email is registered, a reset link has been sent.");
+      if (res.ok && result.success) {
+        toast.success(result.message || "Reset link sent successfully!");
         reset();
       } else {
-        setServerError(result.error || "Failed to send reset link. Please try again.");
+        toast.error(result.message || "Failed to send reset link.");
       }
-    } catch {
-      setServerError("Server error. Please try again later.");
+    } catch (err) {
+      toast.error("Server error. Please try again later.");
     }
   };
 
@@ -65,14 +62,6 @@ export default function ForgotPasswordPage() {
         >
           {isSubmitting ? "Sending..." : "Send Reset Link"}
         </button>
-        {serverMessage && (
-          <p className="text-green-500 text-lg mt-3 text-center">{serverMessage}</p>
-        )}
-        {serverError && (
-          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
-            {serverError}
-          </p>
-        )}
       </form>
 
       <p className="mt-6 text-center text-gray-600 text-lg">

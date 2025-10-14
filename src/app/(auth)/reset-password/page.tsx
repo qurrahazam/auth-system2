@@ -3,16 +3,15 @@
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resetPasswordSchema } from "@/lib/resetPasswordSchema";
+import { resetPasswordSchema } from "@/lib/ResetPasswordSchema";
 import { z } from "zod";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import toast from "react-hot-toast";
 
 type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
-  const [serverError, setServerError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token") || "";
@@ -43,15 +42,15 @@ export default function ResetPasswordPage() {
 
       if (res.ok) {
         reset();
-        setSuccessMessage("Password reset successfully! Redirecting to login...");
+        toast.success(result.message || "Password reset successfully!");
         setTimeout(() => {
           router.push("/login");
-        }, 3000);
+        }, 2000);
       } else {
-        setServerError(result.error || "Failed to reset password. Please try again.");
+        toast.error(result.message || "Failed to reset password.");
       }
     } catch {
-      setServerError("Server error. Please try again later.");
+      toast.error("Server error. Please try again later.");
     }
   };
 
@@ -88,14 +87,6 @@ export default function ResetPasswordPage() {
         >
           {isSubmitting ? "Updating..." : "Update Password"}
         </button>
-        {successMessage && (
-          <p className="text-green-500 text-lg mt-3 text-center">{successMessage}</p>
-        )}
-        {serverError && (
-          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
-            {serverError}
-          </p>
-        )}
       </form>
 
       <p className="text-gray-600 text-lg text-center mt-6">

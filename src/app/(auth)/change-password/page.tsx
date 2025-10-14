@@ -1,19 +1,18 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { changePasswordSchema } from "@/lib/changePasswordSchema";
 import { z } from "zod";
-import AuthLayout from "@/components/layouts/AuthLayout";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { changePasswordSchema } from "@/lib/ChangePasswordSchema";
 
 type FormData = z.infer<typeof changePasswordSchema>;
 
 export default function ChangePasswordPage() {
-  const [serverError, setServerError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -23,22 +22,26 @@ export default function ChangePasswordPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    const res = await fetch("/api/auth/change-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include",
-    });
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
 
-    const result = await res.json();
-    if (res.ok) {
-      setSuccessMessage("Password updated successfully. Please log in again.");
-      setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+      const result = await res.json();
+      if (!result.success) {
+        toast.error(result.message || "Failed to update password. Please try again.");
+        return;
+      }
 
-    } else {
-      setServerError(result.error || "Failed to update password. Please try again.");
+      toast.success(result.message || "Password updated successfully!");
+      
+      setTimeout(() => router.push("/login"), 2000);
+
+    } catch (error) {
+      toast.error("Network error. Please try again.");
     }
   };
 
@@ -82,14 +85,6 @@ export default function ChangePasswordPage() {
         >
           {isSubmitting ? "Updating..." : "Update Password"}
         </button>
-        {successMessage && (
-          <p className="text-green-500 text-lg mt-3 text-center">{successMessage}</p>
-        )}
-        {serverError && (
-          <p className="text-red-500 text-lg mt-3 text-center" aria-live="polite">
-            {serverError}
-          </p>
-        )}
       </form>
 
       <p className="text-gray-600 text-lg text-center mt-6">
