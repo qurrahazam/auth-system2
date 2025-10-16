@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PostGrid from "@/components/posts/PostGrid";
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -12,7 +14,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch("/api/posts");
+        const res = await fetch("/api/posts/user");
         const data = await res.json();
         setPosts(data);
       } catch (err) {
@@ -79,50 +81,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Posts Section */}
-      <section className="w-full max-w-3xl">
+      <section className="w-full mt-10 px-6">
+
         <h2 className="text-2xl font-bold text-emerald-700 mb-6 text-center">
           Your Posts
         </h2>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading posts...</p>
+          <div className="text-center text-gray-500">Fetching your posts...</div>
         ) : posts.length === 0 ? (
-          <p className="text-center text-gray-500">No posts yet.</p>
+          <div className="text-center text-gray-500">
+            You haven’t written any posts yet.{" "}
+            <Link href="/dashboard/new-post" className="text-emerald-600 font-semibold">
+              Create one now.
+            </Link>
+          </div>
         ) : (
-          <ul className="space-y-3">
-            {posts.map((p) => (
-              <li
-                key={p._id}
-                className="flex justify-between items-center bg-white/70 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-emerald-100 hover:shadow-md transition-all"
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium text-emerald-800">{p.title}</span>
-                  <span className="text-gray-500 text-sm">{p.content}</span>
-                </div>
-                <div className="flex gap-3">
-                  <Link
-                    href={`/dashboard/edit/${p._id}`}
-                    className="text-emerald-600 hover:text-emerald-800 font-medium"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(p._id)}
-                    className="text-red-500 hover:text-red-700 font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <PostGrid posts={posts} />
         )}
       </section>
 
-      <footer className="mt-10 text-sm text-gray-500">
-        © {new Date().getFullYear()} Your App. All rights reserved.
-      </footer>
     </main>
   );
 }
