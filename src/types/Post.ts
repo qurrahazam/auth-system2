@@ -14,6 +14,6 @@ export interface Post {
   views?: number;
   likes?: number;
   readTime?: number;
-  isPublished?: boolean;
+  status: string;
   createdAt: Date;
 }

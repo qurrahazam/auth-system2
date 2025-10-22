@@ -12,7 +12,8 @@ export default function FeaturedPost({ post }: FeaturedPostProps) {
   if (!post) return null;
 
   return (
-    <div className="relative rounded-2xl overflow-hidden mb-20">
+    <div className="relative w-screen overflow-hidden mb-20">
+
       {post.coverImage && (
         <img
           src={post.coverImage}

@@ -1,19 +1,27 @@
-import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/models/Post";
+import { errorResponse, successResponse } from "@/lib/ApiResponse";
+import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(
   req: Request,
   { params }: { params: { slug: string } }
 ) {
-  const { slug } = params;
+  const { slug } = await params;
   await connectDB();
 
   try {
     await Post.findOneAndUpdate({ slug }, { $inc: { likes: 1 } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error updating likes:", error);
-    return NextResponse.json({ success: false }, { status: 500 });
+    return successResponse({
+      message: '',
+      data: '',
+      status: HTTP_STATUS.OK,
+    });
+  } catch (err) {
+    return errorResponse({
+      message: '',
+      error: "Couldn't like",
+      status: HTTP_STATUS.SERVER_ERROR,
+    });
   }
 }

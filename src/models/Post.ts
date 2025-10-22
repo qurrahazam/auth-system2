@@ -1,6 +1,6 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, models, model } from "mongoose";
 
-const Post = new Schema(
+const PostSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true },
@@ -10,7 +10,11 @@ const Post = new Schema(
     tags: [{ type: String }],
     category: { type: String },
     author: { type: String },
-    isPublished: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "draft",
+    },
     readTime: { type: Number },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
@@ -18,4 +22,5 @@ const Post = new Schema(
   { timestamps: true }
 );
 
-export default models.Post || mongoose.model("Post", Post);
+const Post = models.Post || model("Post", PostSchema);
+export default Post;

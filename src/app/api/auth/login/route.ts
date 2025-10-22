@@ -61,7 +61,12 @@ export async function POST(request: Request) {
     }
 
     const response = successResponse({
-      data: null,
+      data:{ user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      },
       message: "Login Successfully",
       status: HTTP_STATUS.OK,
     });

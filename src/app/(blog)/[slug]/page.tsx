@@ -1,9 +1,9 @@
 import { connectDB } from "@/lib/mongodb";
 import Post from "@/models/Post";
 import ReactMarkdown from "react-markdown";
-import { Eye, Heart, CalendarDays, User } from "lucide-react";
+import {CalendarDays, User } from "lucide-react";
 import type { Post as PostType } from "@/types/Post";
-import LikeAndViewButtons from "@/components/LikeAndViewButtons";
+import LikeAndViewButtons from "@/components/posts/LikeAndViewButtons";
 
 export default async function BlogPost({
   params,
@@ -29,7 +29,6 @@ export default async function BlogPost({
 
   return (
     <article className="max-w-3xl mx-auto p-6">
-      {/* Cover Image */}
       {coverImage && (
         <div className="w-full h-64 md:h-96 mb-6">
           <img
