@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/LoginSchema";
@@ -12,8 +12,13 @@ import toast from "react-hot-toast";
 type LoginData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { setUser } = useAuth();
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -24,27 +29,40 @@ export default function LoginPage() {
       body: JSON.stringify(data),
     });
 
+    const user_data = await res.json();
+
     if (res.ok) {
       toast.success("Login successful! Redirecting...");
-      {setTimeout(() =>{
+      setUser(user_data.data);
+      setTimeout(() => {
         router.push("/dashboard");
-      }, 2000)}
-    }
-
-    else {
-      const err = await res.json();
-      toast.error(err.message || "Login failed. Please try again.");
+      }, 2000);
+    } else {
+      toast.error(user_data.message || "Login failed. Please try again.");
     }
   };
 
   return (
     <AuthLayout title="Login" subtitle="Welcome! Please login to your account">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <input {...register("email")} placeholder="Email" className="px-4 py-2 border rounded-lg" />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+        <input
+          {...register("email")}
+          placeholder="Email"
+          className="px-4 py-2 border rounded-lg"
+        />
+        {errors.email && (
+          <p className="text-red-500 text-sm">{errors.email.message}</p>
+        )}
 
-        <input {...register("password")} type="password" placeholder="Password" className="px-4 py-2 border rounded-lg" />
-        {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+        <input
+          {...register("password")}
+          type="password"
+          placeholder="Password"
+          className="px-4 py-2 border rounded-lg"
+        />
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password.message}</p>
+        )}
 
         <button
           type="submit"
@@ -52,9 +70,28 @@ export default function LoginPage() {
           className="bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition"
         >
           {isSubmitting ? "Logging in..." : "Login"}
-          
-        </button><div className="mt-2 text-center"> <button onClick={() => router.push("/forgot-password")} className="text-emerald-600 hover:underline text-lg font-medium" type="button" > Forgot Password? </button> </div>
-        
+        </button>
+
+        <div className="mt-2 text-center">
+          <button
+            onClick={() => router.push("/forgot-password")}
+            className="text-emerald-600 hover:underline text-lg font-medium"
+            type="button"
+          >
+            Forgot Password?
+          </button>
+        </div>
+
+        <div className="mt-2 text-center text-gray-600 text-lg">
+          Don’t have an account?{" "}
+          <button
+            onClick={() => router.push("/signup")}
+            type="button"
+            className="text-emerald-600 text-lg hover:underline font-medium"
+          >
+            Sign up
+          </button>
+        </div>
       </form>
     </AuthLayout>
   );
