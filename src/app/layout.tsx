@@ -1,22 +1,9 @@
 import type { Metadata } from "next";
-// import { GeistSans } from 'geist/font/sans';
-// import { GeistMono } from 'geist/font/mono';
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from 'geist/font/sans';
 import { Toaster } from "react-hot-toast";
-import Header from "@/components/layouts/Header";
 import Footer from "@/components/layouts/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Insightly",
@@ -31,36 +18,34 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${GeistSans.className} antialiased`}
       >
         <AuthProvider>
-        <Header />
-       
-        {children}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000, 
-            style: {
-              background: "#333",
-              color: "#fff",
-            },
-            success: {
-              iconTheme: {
-                primary: "limegreen",
-                secondary: "#fff",
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: "red",
-                secondary: "#fff",
-              },
-            },
-          }}
-        />
-        <Footer/>
-        </AuthProvider>
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000, 
+                style: {
+                  background: "#333",
+                  color: "#fff",
+                },
+                success: {
+                  iconTheme: {
+                    primary: "limegreen",
+                    secondary: "#fff",
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: "red",
+                    secondary: "#fff",
+                  },
+                },
+              }}
+            />
+            <Footer/>
+          </AuthProvider>
       </body>
     </html>
   );
