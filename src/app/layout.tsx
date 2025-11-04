@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { GeistSans } from 'geist/font/sans';
+import { GeistSans } from "geist/font/sans";
 import { Toaster } from "react-hot-toast";
 import Footer from "@/components/layouts/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import HeaderWrapper from "@/components/layouts/Header/HeaderWrapper"; 
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,35 +18,34 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${GeistSans.className} antialiased`}
-      >
+      <body className={`${GeistSans.className} antialiased`}>
         <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000, 
-                style: {
-                  background: "#333",
-                  color: "#fff",
+          <HeaderWrapper /> 
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#333",
+                color: "#fff",
+              },
+              success: {
+                iconTheme: {
+                  primary: "limegreen",
+                  secondary: "#fff",
                 },
-                success: {
-                  iconTheme: {
-                    primary: "limegreen",
-                    secondary: "#fff",
-                  },
+              },
+              error: {
+                iconTheme: {
+                  primary: "red",
+                  secondary: "#fff",
                 },
-                error: {
-                  iconTheme: {
-                    primary: "red",
-                    secondary: "#fff",
-                  },
-                },
-              }}
-            />
-            <Footer/>
-          </AuthProvider>
+              },
+            }}
+          />
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
