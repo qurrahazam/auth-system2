@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import PostFormLayout from "@/components/posts/PostFormLayout";
 import { PostMetaFields } from "@/components/posts/PostMetaFields";
 import { PostFormActions } from "@/components/posts/PostFormAction";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import RichTextEditor from "@/components/editor/TiptapEditor";
 
 interface FormData {
   title: string;
@@ -60,22 +60,12 @@ export default function EditPostPage() {
     setValue("slug", slug);
   };
 
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: "<p></p>",
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setValue("content", html, { shouldValidate: true, shouldDirty: true });
-    },
-  });
-
   useEffect(() => {
     async function fetchPost() {
       try {
         const res = await fetch(`/api/posts/${id}`);
         const data: PostData = await res.json();
-        
+
         if (res.ok) {
           setValue("title", data.title);
           setValue("slug", data.slug);
@@ -83,38 +73,24 @@ export default function EditPostPage() {
           setValue("excerpt", data.excerpt || "");
           setValue("category", data.category || "");
           setValue("tags", data.tags || "");
-          
+
           if (data.coverImage) {
             setExistingCoverImage(data.coverImage);
           }
-          setTimeout(() => {
-            if (editor) {
-              editor.commands.setContent(data.content || "<p></p>");
-            }
-          }, 100);
         } else {
           setMessage("Failed to load post");
         }
       } catch (error) {
-        console.error("Failed to fetch post:", error);
         setMessage("Failed to load post");
       } finally {
         setFetching(false);
       }
     }
-    
+
     if (id) {
       fetchPost();
     }
-  }, [id, setValue, editor]);
-
-  useEffect(() => {
-    if (!editor || fetching) return;
-    const current = editor.getHTML();
-    if ((contentValue || "<p></p>") !== current) {
-      editor.commands.setContent(contentValue || "<p></p>");
-    }
-  }, [editor, contentValue, fetching]);
+  }, [id, setValue]);
 
   useEffect(() => {
     return () => {
@@ -150,9 +126,7 @@ export default function EditPostPage() {
         setMessage(
           status === "draft"
             ? "Draft saved successfully!"
-            : status === "published"
-            ? "Post published successfully!"
-            : "Post submitted for review!"
+            : "Post updated successfully!"
         );
         setTimeout(() => {
           router.push("/dashboard");
@@ -161,7 +135,6 @@ export default function EditPostPage() {
         setMessage(result.error || "Failed to update post");
       }
     } catch (error) {
-      console.error("Post update failed:", error);
       setMessage("Something went wrong.");
     } finally {
       setLoading(false);
@@ -182,8 +155,13 @@ export default function EditPostPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-10 px-4">
-      <div className="max-w-6xl mx-auto backdrop-blur-md bg-white/80 border border-emerald-100 shadow-lg rounded-3xl p-6">
+    <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mx-auto backdrop-blur-md bg-white/80 border border-emerald-100 shadow-lg rounded-3xl p-8"
+      >
         <h1 className="text-3xl font-extrabold text-emerald-700 text-center mb-8">
           Edit Post
         </h1>
@@ -203,12 +181,21 @@ export default function EditPostPage() {
             />
           }
           right={
-            <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-6">
               <div>
-                <Label htmlFor="content">Content</Label>
-
-                <div className="min-h-[70vh] rounded-xl bg-white border border-emerald-100 shadow-sm p-4">
-                  <EditorContent editor={editor} />
+                <Label htmlFor="content" className="text-emerald-800 font-semibold">
+                  Content
+                </Label>
+                <div className="mt-3 border border-emerald-100 rounded-xl bg-white shadow-sm p-3 hover:shadow-md transition-shadow">
+                  <RichTextEditor
+                    content={contentValue}
+                    onChange={(html: string) =>
+                      setValue("content", html, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                  />
                 </div>
 
                 {errors.content && (
@@ -224,15 +211,16 @@ export default function EditPostPage() {
                 onSubmit={onSubmit}
                 isEdit={true}
               />
+
               {message && (
-                <p className="text-center text-sm text-emerald-700 mt-4">
+                <p className="text-center text-sm text-emerald-700 mt-4 font-medium">
                   {message}
                 </p>
               )}
             </div>
           }
         />
-      </div>
+      </motion.div>
     </main>
   );
 }

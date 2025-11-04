@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import PostFormLayout from "@/components/posts/PostFormLayout";
 import { PostMetaFields } from "@/components/posts/PostMetaFields";
 import { PostFormActions } from "@/components/posts/PostFormAction";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import RichTextEditor from "@/components/editor/TiptapEditor";
 
 interface FormData {
   title: string;
@@ -36,7 +36,7 @@ export default function NewPostPage() {
   } = useForm<FormData>();
 
   const title = watch("title");
-  const contentValue = watch("content"); 
+  const contentValue = watch("content");
 
   const handleTitleChange = (value: string) => {
     const slug = value
@@ -51,24 +51,6 @@ export default function NewPostPage() {
       if (preview) URL.revokeObjectURL(preview);
     };
   }, [preview]);
-
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: contentValue || "<p></p>",
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setValue("content", html, { shouldValidate: true, shouldDirty: true });
-    },
-  });
-
-  useEffect(() => {
-    if (!editor) return;
-    const current = editor.getHTML();
-    if ((contentValue || "<p></p>") !== current) {
-      editor.commands.setContent(contentValue || "<p></p>");
-    }
-  }, [editor, contentValue]);
 
   const onSubmit = async (data: FormData, status: "draft" | "published") => {
     setLoading(true);
@@ -98,14 +80,13 @@ export default function NewPostPage() {
         setMessage(
           status === "draft"
             ? "Draft saved successfully!"
-            : "Post submitted for review!"
+            : "Post Published!"
         );
         router.push("/dashboard");
       } else {
         setMessage(result.error || "Failed to create post");
       }
     } catch (error) {
-      console.error("Post creation failed:", error);
       setMessage("Something went wrong.");
     } finally {
       setLoading(false);
@@ -115,8 +96,13 @@ export default function NewPostPage() {
   const categories = ["Tech", "Travel", "Food", "Lifestyle", "Business"];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-10 px-4">
-      <div className="max-w-6xl mx-auto backdrop-blur-md bg-white/80 border border-emerald-100 shadow-lg rounded-3xl p-6">
+    <main className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mx-auto max-w-7xl backdrop-blur-md bg-white/80 border border-emerald-100 shadow-lg rounded-3xl p-8"
+      >
         <h1 className="text-3xl font-extrabold text-emerald-700 text-center mb-8">
           New Post
         </h1>
@@ -135,12 +121,21 @@ export default function NewPostPage() {
             />
           }
           right={
-            <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-6">
               <div>
-                <Label htmlFor="content">Content</Label>
-
-                <div className="min-h-[70vh] rounded-xl bg-white border border-emerald-100 shadow-sm p-4">
-                  <EditorContent editor={editor} />
+                <Label htmlFor="content" className="text-emerald-800 font-semibold">
+                  Content
+                </Label>
+                <div className="mt-3 border border-emerald-100 rounded-xl bg-white shadow-sm p-3 hover:shadow-md transition-shadow">
+                  <RichTextEditor
+                    content={contentValue}
+                    onChange={(html: string) =>
+                      setValue("content", html, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                  />
                 </div>
 
                 {errors.content && (
@@ -155,15 +150,16 @@ export default function NewPostPage() {
                 handleSubmit={handleSubmit}
                 onSubmit={onSubmit}
               />
+
               {message && (
-                <p className="text-center text-sm text-emerald-700 mt-4">
+                <p className="text-center text-sm text-emerald-700 mt-4 font-medium">
                   {message}
                 </p>
               )}
             </div>
           }
         />
-      </div>
+      </motion.div>
     </main>
   );
 }
