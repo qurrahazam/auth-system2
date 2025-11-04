@@ -29,3 +29,13 @@ body {
   outline: none;
   box-shadow: none;
 }
+
+button {
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+button:hover {
+  background-color: #d1fae5; /* emerald-100 */
+}
+
