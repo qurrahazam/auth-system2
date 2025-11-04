@@ -5,7 +5,7 @@ import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
   await connectDB();

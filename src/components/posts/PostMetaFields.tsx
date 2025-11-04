@@ -19,33 +19,38 @@ export function PostMetaFields({
   const title = watch("title");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-10">
 
       <div>
         <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          placeholder="Enter post title"
-          {...register("title", { required: "Title is required" })}
-          onChange={(e) => handleTitleChange(e.target.value)}
-        />
-        {errors.title && (
-          <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-        )}
+        <div className="mt-3">
+          <Input
+            id="title"
+            placeholder="Enter post title"
+            {...register("title", { required: "Title is required" })}
+            onChange={(e) => handleTitleChange(e.target.value)}
+          />
+          {errors.title && (
+            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+          )}
+        </div>
       </div>
 
 
       <div>
         <Label htmlFor="slug">Slug (auto-generated)</Label>
-        <Input
-          id="slug"
-          {...register("slug", { required: "Slug is required" })}
-        />
+        <div className="mt-3">
+          <Input
+            id="slug"
+            {...register("slug", { required: "Slug is required" })}
+          />
+        </div>
       </div>
 
 
       <div>
         <Label htmlFor="coverImage">Cover Image</Label>
+        <div className="mt-3">
         <div className="flex items-center gap-4">
           <Controller
             name="coverImage"
@@ -65,6 +70,7 @@ export function PostMetaFields({
             )}
           />
           <ImagePlus className="text-emerald-500" />
+          </div>
         </div>
         {preview && (
           <div className="mt-3">
@@ -81,15 +87,18 @@ export function PostMetaFields({
 
       <div>
         <Label htmlFor="excerpt">Excerpt</Label>
+        <div className="mt-3">
         <Textarea
           id="excerpt"
           placeholder="Short summary of your post..."
           {...register("excerpt")}
         />
+        </div>
       </div>
 
       <div>
         <Label htmlFor="category">Category</Label>
+        <div className="mt-3">
         <select
           id="category"
           className="w-full p-2 border border-gray-200 rounded-md"
@@ -102,15 +111,18 @@ export function PostMetaFields({
             </option>
           ))}
         </select>
+        </div>
       </div>
 
       <div>
         <Label htmlFor="tags">Tags (comma separated)</Label>
+        <div className="mt-3">
         <Input
           id="tags"
           placeholder="e.g. react, javascript, ui"
           {...register("tags")}
         />
+        </div>
       </div>
     </div>
   );

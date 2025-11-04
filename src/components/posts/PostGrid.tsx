@@ -1,16 +1,8 @@
-"use client";
-
-import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import type { Post } from "@/types/Post";
-import { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, User, Edit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function timeAgo(date: string | Date) {
   const now = new Date();
@@ -33,65 +25,103 @@ function timeAgo(date: string | Date) {
   return "Just now";
 }
 
-interface PostGridProps {
-  posts: Post[];
-  renderActions?: (post: Post) => React.ReactNode; 
+function truncateToWords(text: string, wordLimit: number) {
+  const words = text.split(/\s+/);
+  if (words.length <= wordLimit) return text;
+  return words.slice(0, wordLimit).join(" ") + "...";
 }
 
-export default function PostGrid({ posts, renderActions }: PostGridProps) {
-  const [openPostId, setOpenPostId] = useState<string | null>(null); 
+interface PostGridProps {
+  posts: Post[];
+  showActions?: boolean;
+  onEdit?: (postId: string) => void;
+  onDelete?: (postId: string) => void;
+}
 
-  if (!posts || posts.length === 0)
-    return <p className="text-center text-gray-500">No posts yet.</p>;
-
+export default function PostGrid({ posts, showActions = false, onEdit, onDelete }: PostGridProps) {
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 ml-9 mr-9">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 px-6 md:px-9">
       {posts.map((post) => (
-        <motion.div
-          key={post._id}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className="relative"
-        >
+        <div key={post._id} className="relative h-full group">
           <Link href={`/${post.slug}`} className="block h-full">
-            <Card className="flex flex-col h-full overflow-hidden bg-white/80 backdrop-blur-md border-emerald-100 hover:shadow-lg transition-all cursor-pointer group">
+            <Card className="flex flex-col h-full overflow-hidden border-0 shadow-md hover:shadow-2xl transition-all duration-300 bg-white/90 backdrop-blur-sm group-hover:bg-white">
               {post.coverImage && (
-                <div className="relative h-48 w-full overflow-hidden">
+                <div className="relative h-52 w-full overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
                   <img
                     src={post.coverImage}
                     alt={post.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 </div>
               )}
-              <div className="flex flex-col flex-1">
-                <CardHeader className="flex-1 p-4">
-                  <CardTitle className="text-lg text-emerald-800 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+
+              <div className="flex flex-col flex-1 p-5">
+                <CardHeader className="flex-1 p-0 mb-3">
+                  <CardTitle className="text-xl font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-emerald-600 transition-colors leading-tight">
                     {post.title}
                   </CardTitle>
-                  <CardDescription className="text-gray-600 line-clamp-2">
-                    {post.excerpt || post.content.slice(0, 120) + "..."}
+                  <CardDescription className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                    {truncateToWords(post.excerpt || post.content, 13)}
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent className="mt-auto flex justify-between items-center text-sm text-gray-500 px-4 pb-4">
-                  <span>{post.author?.name || "Unknown"}</span>
-                  <div className="flex gap-4">
-                    {post.createdAt && <span>{timeAgo(post.createdAt)}</span>}
-                    {post.readTime && <span>⏱ {post.readTime} min</span>}
+                <CardContent className="p-0 mt-auto pt-4 border-t border-gray-100">
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" />
+                      <span className="font-medium">{post.author || "Unknown"}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {post.createdAt && (
+                        <span className="flex items-center gap-1">
+                          {timeAgo(post.createdAt)}
+                        </span>
+                      )}
+                      {post.readTime && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {post.readTime}m
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </div>
-            </Card>
 
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+            </Card>
           </Link>
 
-          {renderActions && (
-            <div className="absolute top-2 right-2">
-              {renderActions(post)}
+          {showActions && (
+            <div className="absolute top-3 right-3 flex gap-2 z-20">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-md"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit?.(post._id);
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 w-8 p-0 bg-red-500/90 hover:bg-red-600 shadow-md"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete?.(post._id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           )}
-        </motion.div>
+        </div>
       ))}
     </div>
   );

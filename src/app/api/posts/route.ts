@@ -16,16 +16,14 @@ export async function GET(req: Request) {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "9");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(50, parseInt(searchParams.get("limit") || "6"));
     const category = searchParams.get("category");
     const search = searchParams.get("search");
 
     const query: any = { status: "published" };
 
-    if (category) {
-      query.category = category;
-    }
+    if (category) query.category = category;
 
     if (search) {
       query.$or = [
@@ -34,31 +32,35 @@ export async function GET(req: Request) {
         { tags: { $regex: search, $options: "i" } },
       ];
     }
+
     const skip = (page - 1) * limit;
     const totalPosts = await Post.countDocuments(query);
     const totalPages = Math.ceil(totalPosts / limit);
+
     const posts = await Post.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate("author", "name email")
       .lean();
-    return NextResponse.json({
-      posts,
-      currentPage: page,
-      totalPages,
-      totalPosts,
-      hasMore: page < totalPages,
-    });
+
+    return NextResponse.json(
+      {
+        posts,
+        currentPage: page,
+        totalPages,
+        totalPosts,
+        hasMore: page < totalPages,
+      },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   } catch (error) {
-    console.error("Error fetching posts:", error);
     return NextResponse.json(
       { error: "Failed to fetch posts" },
       { status: 500 }
     );
   }
 }
-
 
 function calculateReadTime(content: string) {
   const wordsPerMinute = 200;
@@ -143,7 +145,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(newPost, { status: 201 });
   } catch (err) {
-    console.error("Post creation failed:", err);
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 }

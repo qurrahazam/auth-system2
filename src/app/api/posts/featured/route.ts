@@ -5,7 +5,7 @@ import Post from "@/models/Post";
 
 export async function GET() {
   await connectDB();
-
+  
   const featured = await Post.find({ status : 'published' })
     .sort({ likes: -1 })
     .limit(3)

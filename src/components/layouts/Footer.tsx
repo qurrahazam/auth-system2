@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Github, Twitter, Linkedin } from "lucide-react";
 
 export default function Footer() {
+  const year = new Date().getFullYear()
   return (
-    <footer className="w-full border-t border-emerald-100 bg-white/60 backdrop-blur-md">
+    <footer className="w-full border-t border-emerald-100 bg-white/60 backdrop-blur-md relative z-50">
       <div className="mx-auto ml-3 mr-3 px-6 py-8 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-600">
 
         <p className="text-center sm:text-left">

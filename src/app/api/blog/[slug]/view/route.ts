@@ -5,7 +5,7 @@ import { HTTP_STATUS } from "@/lib/HttpStatus";
 
 export async function POST(
   req: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
   await connectDB();
@@ -20,7 +20,7 @@ export async function POST(
   } catch (err) {
     return errorResponse({
       message: '',
-      error: "Couldn't increment view",
+      error: "Couldn't like",
       status: HTTP_STATUS.SERVER_ERROR,
     });
   }

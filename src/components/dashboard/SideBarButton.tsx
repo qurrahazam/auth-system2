@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SidebarButtonProps {
   icon: React.ReactNode;
@@ -16,17 +16,24 @@ export default function SidebarButton({
   onClick,
 }: SidebarButtonProps) {
   return (
-    <Button
-      variant={active ? "secondary" : "ghost"}
+    <button
       onClick={onClick}
-      className={`w-full justify-start gap-3 ${
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left",
         active
-          ? "bg-emerald-100 text-emerald-700"
-          : "text-gray-600 hover:text-emerald-700"
-      }`}
+          ? "bg-emerald-50 text-emerald-700 shadow-sm"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+      )}
     >
-      {icon}
-      {label}
-    </Button>
+      <span
+        className={cn(
+          "flex items-center justify-center",
+          active ? "text-emerald-600" : "text-gray-500"
+        )}
+      >
+        {icon}
+      </span>
+      <span className="truncate">{label}</span>
+    </button>
   );
 }

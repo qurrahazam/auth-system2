@@ -22,7 +22,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
 
   try {
     const decoded_token = verifyToken(token);
-    if (!decoded_token || !decoded_token.id) {
+    if (!decoded_token) {
       return errorResponse({
         error: "Expired or Invalid token",
         message: "Invalid or expired token",
@@ -39,7 +39,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       status: HTTP_STATUS.NOT_FOUND,
     });
 
-    if (post.author.toString() !== decoded_token.id)
+    if (post.author.toString() !== decoded_token.email)
       return errorResponse({
         error: "Not Allowed",
         message: "Not allowed",
@@ -75,7 +75,6 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
           const oldImagePath = path.join(process.cwd(), "public", post.coverImage);
           await unlink(oldImagePath);
         } catch (err) {
-          console.log("Old image not found or couldn't be deleted");
         }
       }
 
@@ -101,7 +100,6 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     });
     
   } catch (err) {
-    console.error("Error updating post:", err);
     return errorResponse({
       message: "Server Error",
       error: "Server Error",
@@ -127,7 +125,6 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     
     return NextResponse.json(post);
   } catch (error) {
-    console.error("Error fetching post:", error);
     return errorResponse({ 
       error: "Failed to fetch post",
       message: "Failed",
@@ -136,7 +133,10 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
   }
 }
 
-export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   const { id } = await context.params;
 
   try {
@@ -144,18 +144,48 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
 
     const cookieHeader = req.headers.get("cookie");
     const token = cookieHeader?.split("token=")[1]?.split(";")[0];
-    if (!token) return errorResponse({error: 'Unauthorized', message: 'Unauthorized', status: HTTP_STATUS.UNAUTHORIZED, });
     
+    if (!token) {
+      return errorResponse({
+        error: "Unauthorized",
+        message: "Authentication required",
+        status: HTTP_STATUS.UNAUTHORIZED,
+      });
+    }
+
     const user = verifyToken(token);
-    if (!user) return errorResponse({ error: 'invalid token', message: 'Invalid Token', status:HTTP_STATUS.UNAUTHORIZED, });
+    if (!user || !user.email) {
+      return errorResponse({
+        error: "Invalid token",
+        message: "Invalid or expired token",
+        status: HTTP_STATUS.UNAUTHORIZED,
+      });
+    }
 
-    const deleted = await Post.findOneAndDelete({ _id: id, author: user.email });
-    if (!deleted)
-      return errorResponse ({ message: "Post not found or not authorized", error: "Post not found", status: HTTP_STATUS.FORBIDDEN, });
+    const deleted = await Post.findOneAndDelete({
+      _id: id,
+      author: user.email,
+    });
 
-    return successResponse({ message: "Post deleted successfully", data: "", status: HTTP_STATUS.OK,});
+    if (!deleted) {
+      return errorResponse({
+        message: "Post not found or you don't have permission to delete it",
+        error: "Not found or forbidden",
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+
+    return successResponse({
+      message: "Post deleted successfully",
+      data: { deletedId: id },
+      status: HTTP_STATUS.OK,
+    });
   } catch (err) {
-    return errorResponse({ error: "Server Error", message: "Error deleting post", status: HTTP_STATUS.SERVER_ERROR });
+    console.error("Error deleting post:", err);
+    return errorResponse({
+      error: "Server Error",
+      message: "An error occurred while deleting the post",
+      status: HTTP_STATUS.SERVER_ERROR,
+    });
   }
 }
-
