@@ -7,10 +7,7 @@ export interface Post {
   coverImage?: string;
   tags?: string[];
   category?: string;
-  author?: {
-    name?: string;
-    email?: string;
-  };
+  author?: string;
   views?: number;
   likes?: number;
   readTime?: number;
